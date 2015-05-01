@@ -693,38 +693,35 @@ mpls_tunnel_modify(int cmd, int argc, char **argv)
 {
         unsigned int key = -2;
         struct ifreq ifr;
-        struct mpls_tunnel_req mtr;
-        struct mpls_tunnel_req* mtr_rcv;
         int err;
         int fd;
 
         memset(&ifr, 0, sizeof(ifr));
-        memset(&mtr, 0, sizeof(mtr));
-        strcpy(ifr.ifr_name, "mpls0");
 
-        if ((cmd == SIOCDELTUNNEL || cmd == SIOCGETTUNNEL) && 
-             strcmp(*argv, "dev") == 0) {
-                NEXT_ARG();
-                strncpy(mtr.mt_ifname, *argv, IFNAMSIZ);
-        } else if (cmd == SIOCADDTUNNEL && strcmp(*argv, "nhlfe") == 0) {
-                NEXT_ARG();
-                if (get_unsigned(&key, *argv, 0))
-                        invarg(*argv, "invalid NHLFE key");
-                mtr.mt_nhlfe_key = key;
-        } else {
-                usage();
+	while (argc > 0) {
+                if (strcmp(*argv, "dev") == 0) {
+                        NEXT_ARG();
+                        strncpy(ifr.ifr_name, *argv, IFNAMSIZ);
+                } else if (strcmp(*argv, "nhlfe") == 0) {
+                        NEXT_ARG();
+                        if (get_unsigned(&key, *argv, 0))
+                                invarg(*argv, "invalid NHLFE key");
+                        ifr.ifr_ifru.ifru_ivalue = key;
+                } else {
+                        usage();
+                }
+                argc--; argv++;
+        }
+
+        if (!strlen(ifr.ifr_name)) {
+                fprintf(stderr, "You must specify a interface name\n");
+                exit(1);
         }
 
         fd = socket(AF_INET, SOCK_DGRAM, 0);
-        ifr.ifr_data = (void*)&mtr;
         err = ioctl(fd, cmd, &ifr);
-        
         if (err)
                 perror("ioctl");
-        else {
-                mtr_rcv = (struct mpls_tunnel_req*) ifr.ifr_data;
-                print_tunnel(mtr_rcv, stdout);
-        }
 
         return 0;
 }
@@ -1274,6 +1271,8 @@ int do_tunnel(int argc, char **argv) {
 	if (matches(*argv, "delete") == 0)
 		return mpls_tunnel_add(MPLS_CMD_DELTUNNEL,0, argc-1, argv+1);
         if (matches(*argv, "get") == 0)
+                return mpls_tunnel_modify(SIOCGETTUNNEL, argc-1, argv+1);
+        if (matches(*argv, "set") == 0)
                 return mpls_tunnel_modify(SIOCGETTUNNEL, argc-1, argv+1);
         if (matches(*argv, "help") == 0)
                 usage();
