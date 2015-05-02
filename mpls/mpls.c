@@ -566,7 +566,7 @@ mpls_nhlfe_modify(int cmd, unsigned flags, int argc, char **argv)
 
         if (flags & NLM_F_CREATE) {
                 if (rtnl_talk(&rth1, &req.n, 0, 0, &req.n, NULL, NULL) < 0)
-                        exit(2);
+			 exit(2);
 
                 print_mpls(NULL, &req.n, stdout);
         } else {
