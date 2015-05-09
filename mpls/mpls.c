@@ -841,7 +841,7 @@ void print_instructions(FILE *fp, struct mpls_instr_req *instr)
         for(i = 0;i < instr->mir_instr_length;i++) {
                 ci = &instr->mir_instr[i];
                         
-                /*switch (ci->mir_opcode) {
+                switch (ci->mir_opcode) {
                         case MPLS_OP_NOP:
                                 fprintf(fp, "noop ");
                                 break;
@@ -956,7 +956,7 @@ void print_instructions(FILE *fp, struct mpls_instr_req *instr)
                         default:
                                 fprintf(fp, "<unknown opcode %d> ", 
                                         ci->mir_opcode);
-                }*/
+                }
         }
 }
 
